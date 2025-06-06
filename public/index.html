@@ -55,7 +55,7 @@
       reader.onload = async function () {
         const base64 = reader.result.split(',')[1];
 
-        appendToChat("You", promptText + " [Image uploaded]");
+        appendToChat("You", promptText + " [Image uploaded]", reader.result);
 
         try {
           const response = await fetch("/.netlify/functions/chatgpt-image", {
@@ -91,11 +91,15 @@
       reader.readAsDataURL(file); // converts image to base64
     }
 
-    function appendToChat(sender, text) {
+    function appendToChat(sender, text, imageDataUrl) {
       const chatBox = document.getElementById('chat-box');
       const message = document.createElement('div');
       message.className = "message";
-      message.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      let html = `<strong>${sender}:</strong> ${text}`;
+      if (imageDataUrl) {
+        html += `<br><img src="${imageDataUrl}" alt="Uploaded image" style="max-width:200px;max-height:200px;margin-top:6px;border:1px solid #ccc;">`;
+      }
+      message.innerHTML = html;
       chatBox.appendChild(message);
       chatBox.scrollTop = chatBox.scrollHeight;
     }
