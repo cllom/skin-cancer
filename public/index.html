@@ -55,7 +55,7 @@
       reader.onload = async function () {
         const base64 = reader.result.split(',')[1];
 
-        appendToChat("You", promptText + " [Image uploaded]", reader.result);
+        appendToChat("You", promptText, reader.result);
 
         try {
           const response = await fetch("/.netlify/functions/chatgpt-image", {
