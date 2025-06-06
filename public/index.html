@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat with ChatGPT</title>
+  <title>Skin Cancer Detection with ChatGPT</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
     #chat-box {
@@ -26,49 +26,60 @@
   </style>
 </head>
 <body>
-  <h1>Chat with ChatGPT</h1>
+  <h1>Skin Cancer Detection Chat</h1>
 
   <div id="chat-box"></div>
-  <input type="text" id="chat-input" placeholder="Type your message..." onkeydown="if(event.key==='Enter')sendChat()" />
-  <button onclick="sendChat()">Send</button>
+
+  <input type="file" id="image-upload" accept="image/*" />
+  <br />
+  <input type="text" id="chat-input" placeholder="Optional message..." onkeydown="if(event.key==='Enter')sendChat()" />
+  <button onclick="sendChat()">Analyze Image</button>
 
   <div id="error" style="color:red; margin-top:10px;"></div>
 
   <script>
-    const chatHistory = [
-      { role: "system", content: "You are a helpful assistant." }
-    ];
-
     async function sendChat() {
-      const input = document.getElementById('chat-input');
-      const userMessage = input.value.trim();
-      if (!userMessage) return;
+      const fileInput = document.getElementById('image-upload');
+      const promptInput = document.getElementById('chat-input');
+      const promptText = promptInput.value.trim() || "Does this image show signs of skin cancer?";
 
-      appendToChat("You", userMessage);
-      input.value = '';
-      document.getElementById('error').textContent = '';
-      chatHistory.push({ role: "user", content: userMessage });
-
-      try {
-        const response = await fetch("/.netlify/functions/chatgpt", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: chatHistory })
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error?.message || "Unknown error");
-        }
-
-        const data = await response.json();
-        const reply = data.choices?.[0]?.message?.content || "No reply.";
-        appendToChat("ChatGPT", reply);
-        chatHistory.push({ role: "assistant", content: reply });
-
-      } catch (err) {
-        document.getElementById('error').textContent = 'Error: ' + err.message;
+      if (fileInput.files.length === 0) {
+        document.getElementById('error').textContent = "Please upload an image.";
+        return;
       }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = async function () {
+        const base64Image = reader.result.split(',')[1]; // Remove "data:image/...;base64,"
+
+        appendToChat("You", promptText + " [Image uploaded]");
+
+        try {
+          const response = await fetch("/.netlify/functions/chatgpt-image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              prompt: promptText,
+              image: base64Image
+            })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || "Unknown error");
+          }
+
+          const data = await response.json();
+          const reply = data.choices?.[0]?.message?.content || "No reply.";
+          appendToChat("ChatGPT", reply);
+        } catch (err) {
+          document.getElementById('error').textContent = 'Error: ' + err.message;
+        }
+      };
+
+      reader.readAsDataURL(file); // Load as base64
     }
 
     function appendToChat(sender, text) {

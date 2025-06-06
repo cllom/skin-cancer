@@ -1,38 +1,37 @@
-const fetch = require('node-fetch');
+const fetch = require("node-fetch");
 
-exports.handler = async function (event) {
+exports.handler = async function(event) {
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      body: JSON.stringify({ error: 'Method Not Allowed' }),
-    };
+    return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  try {
-    const { messages } = JSON.parse(event.body);
+  const { prompt, image } = JSON.parse(event.body || "{}");
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: messages,
-      }),
-    });
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-4-vision-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            { type: "image_url", image_url: { url: `data:image/jpeg;base64,${image}` } }
+          ]
+        }
+      ],
+      max_tokens: 1000
+    })
+  });
 
-    const data = await response.json();
+  const data = await response.json();
 
-    return {
-      statusCode: response.ok ? 200 : response.status,
-      body: JSON.stringify(data),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
-    };
-  }
+  return {
+    statusCode: response.ok ? 200 : response.status,
+    body: JSON.stringify(data),
+  };
 };
