@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Skin Cancer Detection with ChatGPT</title>
+  <title>Skin Cancer Image Detector</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
     #chat-box {
@@ -32,7 +32,7 @@
 
   <input type="file" id="image-upload" accept="image/*" />
   <br />
-  <input type="text" id="chat-input" placeholder="Optional message..." onkeydown="if(event.key==='Enter')sendChat()" />
+  <input type="text" id="chat-input" placeholder="Optional prompt..." onkeydown="if(event.key==='Enter')sendChat()" />
   <button onclick="sendChat()">Analyze Image</button>
 
   <div id="error" style="color:red; margin-top:10px;"></div>
@@ -49,37 +49,46 @@
       }
 
       const file = fileInput.files[0];
+      const mimeType = file.type; // "image/png" or "image/jpeg"
       const reader = new FileReader();
 
       reader.onload = async function () {
-        const base64Image = reader.result.split(',')[1]; // Remove "data:image/...;base64,"
+        const base64 = reader.result.split(',')[1];
 
         appendToChat("You", promptText + " [Image uploaded]");
 
         try {
-          const response = await fetch("/.netlify/functions/chatgpt-image", {
+          const response = await fetch("/.netlify/functions/chatgpt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               prompt: promptText,
-              image: base64Image
+              image: base64,
+              mimeType: mimeType
             })
           });
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error?.message || "Unknown error");
+          const rawText = await response.text();
+          let data;
+          try {
+            data = JSON.parse(rawText);
+          } catch (err) {
+            throw new Error("Bad JSON from server: " + rawText);
           }
 
-          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || "Unknown error");
+          }
+
           const reply = data.choices?.[0]?.message?.content || "No reply.";
           appendToChat("ChatGPT", reply);
+
         } catch (err) {
           document.getElementById('error').textContent = 'Error: ' + err.message;
         }
       };
 
-      reader.readAsDataURL(file); // Load as base64
+      reader.readAsDataURL(file); // converts image to base64
     }
 
     function appendToChat(sender, text) {
