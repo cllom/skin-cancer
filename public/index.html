@@ -32,7 +32,7 @@
 
   <input type="file" id="image-upload" accept="image/*" />
   <br />
-  <input type="text" id="chat-input" value="Is there any indication of melanoma or skin cancer in this image?"  onkeydown="if(event.key==='Enter')sendChat()" />
+  <input type="text" id="chat-input" value="Describe the visible features of this mole: color, border, shape, and symmetry. Mention if any traits are commonly associated with melanoma. Conclude if we need to refer to dermatologist or not."  onkeydown="if(event.key==='Enter')sendChat()" />
   <button onclick="sendChat()">Analyze Image</button>
 
   <div id="error" style="color:red; margin-top:10px;"></div>
