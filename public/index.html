@@ -32,7 +32,7 @@
 
   <input type="file" id="image-upload" accept="image/*" />
   <br />
-  <input type="text" id="chat-input" placeholder="Optional prompt..." onkeydown="if(event.key==='Enter')sendChat()" />
+  <input type="text" id="chat-input" value="Is there any indication of melanoma or skin cancer in this image?"  onkeydown="if(event.key==='Enter')sendChat()" />
   <button onclick="sendChat()">Analyze Image</button>
 
   <div id="error" style="color:red; margin-top:10px;"></div>
@@ -41,8 +41,6 @@
     async function sendChat() {
       const fileInput = document.getElementById('image-upload');
       const promptInput = document.getElementById('chat-input');
-      const promptText = promptInput.value.trim() || "Does this image show signs of skin cancer?";
-
       if (fileInput.files.length === 0) {
         document.getElementById('error').textContent = "Please upload an image.";
         return;
