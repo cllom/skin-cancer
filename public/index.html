@@ -49,6 +49,7 @@
       const file = fileInput.files[0];
       const mimeType = file.type; // "image/png" or "image/jpeg"
       const reader = new FileReader();
+      const promptText = promptInput.value;
 
       reader.onload = async function () {
         const base64 = reader.result.split(',')[1];
